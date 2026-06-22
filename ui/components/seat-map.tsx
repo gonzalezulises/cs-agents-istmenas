@@ -68,7 +68,7 @@ export function SeatMap({ onSeatSelect, selectedSeat }: SeatMapProps) {
                                             className={`w-8 h-8 text-xs font-medium border rounded ${getSeatColor(status, isExitRow)} transition-colors`}
                                             onClick={() => status === 'available' && onSeatSelect(seatNumber)}
                                             disabled={status === 'occupied'}
-                                            title={`Seat ${seatNumber}${isExitRow ? ' (Exit Row)' : ''}${status === 'occupied' ? ' - Occupied' : ''}`}
+                                            title={`Asiento ${seatNumber}${isExitRow ? ' (Fila de salida)' : ''}${status === 'occupied' ? ' - Ocupado' : ''}`}
                                         >
                                             {letter}
                                         </button>
@@ -86,7 +86,7 @@ export function SeatMap({ onSeatSelect, selectedSeat }: SeatMapProps) {
                                             className={`w-8 h-8 text-xs font-medium border rounded ${getSeatColor(status, isExitRow)} transition-colors`}
                                             onClick={() => status === 'available' && onSeatSelect(seatNumber)}
                                             disabled={status === 'occupied'}
-                                            title={`Seat ${seatNumber}${isExitRow ? ' (Exit Row)' : ''}${status === 'occupied' ? ' - Occupied' : ''}`}
+                                            title={`Asiento ${seatNumber}${isExitRow ? ' (Fila de salida)' : ''}${status === 'occupied' ? ' - Ocupado' : ''}`}
                                         >
                                             {letter}
                                         </button>
@@ -104,33 +104,33 @@ export function SeatMap({ onSeatSelect, selectedSeat }: SeatMapProps) {
         <Card className="w-full max-w-md mx-auto my-4 bg-blue-50">
             <CardContent className="p-4">
                 <div className="text-center mb-4">
-                    <h3 className="font-semibold text-lg mb-2">Select Your Seat</h3>
+                    <h3 className="font-semibold text-lg mb-2">Selecciona tu asiento</h3>
                     <div className="flex justify-center gap-4 text-xs">
                         <div className="flex items-center gap-1">
                             <div className="w-3 h-3 bg-emerald-100 border border-emerald-300 rounded"></div>
-                            <span>Available</span>
+                            <span>Disponible</span>
                         </div>
                         <div className="flex items-center gap-1">
                             <div className="w-3 h-3 bg-gray-300 rounded"></div>
-                            <span>Occupied</span>
+                            <span>Ocupado</span>
                         </div>
                         <div className="flex items-center gap-1">
                             <div className="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded"></div>
-                            <span>Exit Row</span>
+                            <span>Fila de salida</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="space-y-4">
-                    {renderSeatSection("Business Class", SEAT_LAYOUT.business, "border-b pb-4")}
+                    {renderSeatSection("Clase Ejecutiva", SEAT_LAYOUT.business, "border-b pb-4")}
                     {renderSeatSection("Economy Plus", SEAT_LAYOUT.economyPlus, "border-b pb-4")}
-                    {renderSeatSection("Economy", SEAT_LAYOUT.economy, "")}
+                    {renderSeatSection("Económica", SEAT_LAYOUT.economy, "")}
                 </div>
 
                 {selectedSeat && (
                     <div className="mt-4 p-3 bg-blue-50 rounded-lg text-center">
                         <p className="text-sm font-medium text-blue-800">
-                            Selected: Seat {selectedSeat}
+                            Seleccionado: Asiento {selectedSeat}
                         </p>
                     </div>
                 )}

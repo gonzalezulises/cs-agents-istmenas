@@ -17,49 +17,49 @@ from .demo_data import active_itinerary, apply_itinerary_defaults, get_itinerary
 async def faq_lookup_tool(question: str) -> str:
     """Lookup answers to frequently asked questions."""
     q = question.lower()
-    if "bag" in q or "baggage" in q:
+    if any(k in q for k in ["bag", "baggage", "equipaje", "maleta"]):
         return (
-            "You are allowed to bring one bag on the plane. "
-            "It must be under 50 pounds and 22 inches x 14 inches x 9 inches. "
-            "If a bag is delayed or missing, file a baggage claim and we will track it for delivery."
+            "Puedes llevar una maleta a bordo. "
+            "Debe pesar menos de 50 libras y medir 56 cm x 36 cm x 23 cm. "
+            "Si una maleta se retrasa o se pierde, abre un reclamo de equipaje y la rastreamos para entregártela."
         )
-    if "compensation" in q or "delay" in q or "voucher" in q:
+    if any(k in q for k in ["compensation", "delay", "voucher", "compensación", "compensacion", "retraso", "demora", "indemniz"]):
         return (
-            "For lengthy delays we provide duty-of-care: hotel and meal vouchers plus ground transport where needed. "
-            "If the delay is over 3 hours or causes a missed connection, we also open a compensation case and can offer miles or travel credit. "
-            "A Refunds & Compensation agent can submit the case and share the voucher details with you."
+            "Ante retrasos prolongados ofrecemos deber de asistencia: vales de hotel y comidas, más transporte terrestre cuando se necesite. "
+            "Si el retraso supera las 3 horas o causa una conexión perdida, también abrimos un caso de compensación y podemos ofrecer millas o crédito de viaje. "
+            "Un agente de Reembolsos y Compensación puede registrar el caso y compartirte los detalles de los vales."
         )
-    elif "seats" in q or "plane" in q:
+    elif any(k in q for k in ["seats", "plane", "asiento", "avión", "avion"]):
         return (
-            "There are 120 seats on the plane. "
-            "There are 22 business class seats and 98 economy seats. "
-            "Exit rows are rows 4 and 16. "
-            "Rows 5-8 are Economy Plus, with extra legroom."
+            "El avión tiene 120 asientos. "
+            "Hay 22 asientos de clase ejecutiva y 98 de económica. "
+            "Las filas de salida son la 4 y la 16. "
+            "Las filas 5 a 8 son Economy Plus, con espacio extra para las piernas."
         )
     elif "wifi" in q:
-        return "We have free wifi on the plane, join Airline-Wifi"
-    return "I'm sorry, I don't know the answer to that question."
+        return "Tenemos wifi gratis a bordo; conéctate a la red Istmenas-Wifi."
+    return "Lo siento, no tengo la respuesta a esa pregunta."
 
 
 @function_tool(
     name_override="get_trip_details",
-    description_override="Infer the disrupted Paris->New York->Austin trip from user text and hydrate context.",
+    description_override="Infer the disrupted David->Ciudad de Panamá->Cartagena trip from user text and hydrate context.",
 )
 async def get_trip_details(
     context: RunContextWrapper[AirlineAgentChatContext], message: str
 ) -> str:
     """
-    If the user mentions Paris, New York, or Austin, hydrate the context with the disrupted mock itinerary.
+    If the user mentions David, Ciudad de Panamá/Panamá, or Cartagena, hydrate the context with the disrupted mock itinerary.
     Otherwise, hydrate the on-time mock itinerary. Returns the detected flight and confirmation.
     """
     text = message.lower()
-    keywords = ["paris", "new york", "austin"]
+    keywords = ["david", "panamá", "panama", "cartagena"]
     scenario_key = "disrupted" if any(k in text for k in keywords) else "on_time"
     apply_itinerary_defaults(context.context.state, scenario_key=scenario_key)
     ctx = context.context.state
     if scenario_key == "disrupted":
-        ctx.origin = ctx.origin or "Paris (CDG)"
-        ctx.destination = ctx.destination or "Austin (AUS)"
+        ctx.origin = ctx.origin or "David (DAV)"
+        ctx.destination = ctx.destination or "Cartagena (CTG)"
     segments = ctx.itinerary or []
     segment_summaries = []
     for seg in segments:
@@ -83,7 +83,7 @@ async def update_seat(
     context.context.state.confirmation_number = confirmation_number
     context.context.state.seat_number = new_seat
     assert context.context.state.flight_number is not None, "Flight number is required"
-    return f"Updated seat to {new_seat} for confirmation number {confirmation_number}"
+    return f"Asiento actualizado a {new_seat} para la confirmación {confirmation_number}"
 
 
 @function_tool(
@@ -94,7 +94,7 @@ async def flight_status_tool(
     context: RunContextWrapper[AirlineAgentChatContext], flight_number: str
 ) -> str:
     """Lookup the status for a flight using mock itineraries."""
-    await context.context.stream(ProgressUpdateEvent(text=f"Checking status for {flight_number}..."))
+    await context.context.stream(ProgressUpdateEvent(text=f"Consultando el estado del vuelo {flight_number}..."))
     ctx_state = context.context.state
     ctx_state.flight_number = flight_number
     match = get_itinerary_for_flight(flight_number)
@@ -108,19 +108,19 @@ async def flight_status_tool(
             None,
         )
         if segment:
-            route = f"{segment.get('origin', 'Unknown')} to {segment.get('destination', 'Unknown')}"
+            route = f"{segment.get('origin', 'Desconocido')} a {segment.get('destination', 'Desconocido')}"
             details = [
-                f"Flight {flight_number} ({route})",
-                f"Status: {segment.get('status', 'On time')}",
+                f"Vuelo {flight_number} ({route})",
+                f"Estado: {segment.get('status', 'A tiempo')}",
             ]
             if segment.get("gate"):
-                details.append(f"Gate: {segment['gate']}")
+                details.append(f"Puerta: {segment['gate']}")
             if segment.get("departure") and segment.get("arrival"):
-                details.append(f"Scheduled {segment['departure']} -> {segment['arrival']}")
-            if scenario_key == "disrupted" and segment.get("flight_number") == "PA441":
-                details.append("This delay will cause a missed connection to NY802. Reaccommodation is recommended.")
+                details.append(f"Programado {segment['departure']} -> {segment['arrival']}")
+            if scenario_key == "disrupted" and segment.get("flight_number") == "IS-441":
+                details.append("Este retraso causará la pérdida de la conexión IS-802. Se recomienda reacomodo.")
             await context.context.stream(
-                ProgressUpdateEvent(text=f"Found status for flight {flight_number}")
+                ProgressUpdateEvent(text=f"Estado encontrado para el vuelo {flight_number}")
             )
             return " | ".join(details)
         replacement = next(
@@ -132,17 +132,17 @@ async def flight_status_tool(
             None,
         )
         if replacement:
-            route = f"{replacement.get('origin', 'Unknown')} to {replacement.get('destination', 'Unknown')}"
-            seat = replacement.get("seat", "auto-assign")
+            route = f"{replacement.get('origin', 'Desconocido')} a {replacement.get('destination', 'Desconocido')}"
+            seat = replacement.get("seat", "por asignar")
             await context.context.stream(
-                ProgressUpdateEvent(text=f"Found alternate flight {flight_number}")
+                ProgressUpdateEvent(text=f"Vuelo alterno encontrado {flight_number}")
             )
             return (
-                f"Replacement flight {flight_number} ({route}) is available. "
-                f"Departure {replacement.get('departure')} arriving {replacement.get('arrival')}. Seat {seat} held."
+                f"El vuelo de reemplazo {flight_number} ({route}) está disponible. "
+                f"Sale {replacement.get('departure')} y llega {replacement.get('arrival')}. Asiento {seat} reservado."
             )
-    await context.context.stream(ProgressUpdateEvent(text=f"No disruptions found for {flight_number}"))
-    return f"Flight {flight_number} is on time and scheduled to depart at gate A10."
+    await context.context.stream(ProgressUpdateEvent(text=f"Sin afectaciones para el vuelo {flight_number}"))
+    return f"El vuelo {flight_number} está a tiempo y saldrá por la puerta A10."
 
 
 @function_tool(
@@ -152,13 +152,13 @@ async def flight_status_tool(
 async def baggage_tool(query: str) -> str:
     """Lookup baggage allowance and fees."""
     q = query.lower()
-    if "fee" in q:
-        return "Overweight bag fee is $75."
-    if "allowance" in q:
-        return "One carry-on and one checked bag (up to 50 lbs) are included."
-    if "missing" in q or "lost" in q:
-        return "If a bag is missing, file a baggage claim at the airport or with the Baggage Agent so we can track and deliver it."
-    return "Please provide details about your baggage inquiry."
+    if any(k in q for k in ["fee", "cargo", "costo", "tarifa"]):
+        return "El cargo por exceso de equipaje es de $75."
+    if any(k in q for k in ["allowance", "franquicia", "permitido", "incluye"]):
+        return "Se incluye un equipaje de mano y una maleta facturada (hasta 50 libras)."
+    if any(k in q for k in ["missing", "lost", "perdid", "extravi"]):
+        return "Si una maleta no aparece, abre un reclamo de equipaje en el aeropuerto o con el agente de equipaje para rastrearla y entregártela."
+    return "Por favor, dame más detalles sobre tu consulta de equipaje."
 
 
 @function_tool(
@@ -171,14 +171,14 @@ async def get_matching_flights(
     destination: str | None = None,
 ) -> str:
     """Return mock matching flights for a disrupted itinerary."""
-    await context.context.stream(ProgressUpdateEvent(text="Scanning for matching flights..."))
+    await context.context.stream(ProgressUpdateEvent(text="Buscando vuelos disponibles..."))
     ctx_state = context.context.state
     scenario_key, itinerary = active_itinerary(ctx_state)
     apply_itinerary_defaults(ctx_state, scenario_key=scenario_key)
     options = itinerary.get("rebook_options", [])
     if not options:
-        await context.context.stream(ProgressUpdateEvent(text="No alternates needed — trip on time"))
-        return "All flights are operating on time. No alternate flights are needed."
+        await context.context.stream(ProgressUpdateEvent(text="No se necesitan alternas — viaje a tiempo"))
+        return "Todos los vuelos operan a tiempo. No se necesitan vuelos alternos."
     filtered = [
         opt
         for opt in options
@@ -187,18 +187,18 @@ async def get_matching_flights(
     ]
     final_options = filtered or options
     await context.context.stream(
-        ProgressUpdateEvent(text=f"Found {len(final_options)} matching flight option(s)")
+        ProgressUpdateEvent(text=f"Se encontraron {len(final_options)} opción(es) de vuelo")
     )
     lines = []
     for opt in final_options:
         lines.append(
             f"{opt.get('flight_number')} {opt.get('origin')} -> {opt.get('destination')} "
-            f"dep {opt.get('departure')} arr {opt.get('arrival')} | seat {opt.get('seat', 'auto-assign')} | {opt.get('note', '')}"
+            f"sale {opt.get('departure')} llega {opt.get('arrival')} | asiento {opt.get('seat', 'por asignar')} | {opt.get('note', '')}"
         )
     if scenario_key == "disrupted":
-        lines.append("These options arrive in Austin the next day. Overnight hotel and meals are covered.")
+        lines.append("Estas opciones llegan a Cartagena al día siguiente. El hotel por la noche y las comidas están cubiertos.")
     ctx_state.itinerary = ctx_state.itinerary or deepcopy(itinerary.get("segments", []))
-    return "Matching flights:\n" + "\n".join(lines)
+    return "Vuelos disponibles:\n" + "\n".join(lines)
 
 
 @function_tool(
@@ -209,7 +209,7 @@ async def book_new_flight(
     context: RunContextWrapper[AirlineAgentChatContext], flight_number: str | None = None
 ) -> str:
     """Book a replacement flight using mock inventory and update context."""
-    await context.context.stream(ProgressUpdateEvent(text="Booking replacement flight..."))
+    await context.context.stream(ProgressUpdateEvent(text="Reservando vuelo de reemplazo..."))
     ctx_state = context.context.state
     scenario_key, itinerary = active_itinerary(ctx_state)
     apply_itinerary_defaults(ctx_state, scenario_key=scenario_key)
@@ -228,10 +228,10 @@ async def book_new_flight(
             random.choices(string.ascii_uppercase + string.digits, k=6)
         )
         ctx_state.confirmation_number = confirmation
-        await context.context.stream(ProgressUpdateEvent(text="Booked placeholder flight"))
+        await context.context.stream(ProgressUpdateEvent(text="Vuelo provisional reservado"))
         return (
-            f"Booked flight {flight_number or 'TBD'} with confirmation {confirmation}. "
-            f"Seat assignment: {seat}."
+            f"Vuelo {flight_number or 'por definir'} reservado con la confirmación {confirmation}. "
+            f"Asiento asignado: {seat}."
         )
     ctx_state.flight_number = selection.get("flight_number")
     ctx_state.seat_number = selection.get("seat") or ctx_state.seat_number or "auto-assign"
@@ -241,8 +241,8 @@ async def book_new_flight(
         for seg in ctx_state.itinerary
         if not (
             scenario_key == "disrupted"
-            and seg.get("origin", "").startswith("New York")
-            and seg.get("destination", "").startswith("Austin")
+            and seg.get("origin", "").startswith("Ciudad de Panamá")
+            and seg.get("destination", "").startswith("Cartagena")
         )
     ]
     updated_itinerary.append(
@@ -263,13 +263,13 @@ async def book_new_flight(
     ctx_state.confirmation_number = confirmation
     await context.context.stream(
         ProgressUpdateEvent(
-            text=f"Rebooked to {selection['flight_number']} with seat {ctx_state.seat_number}",
+            text=f"Reacomodado al {selection['flight_number']} con asiento {ctx_state.seat_number}",
         )
     )
     return (
-        f"Rebooked to {selection['flight_number']} from {selection.get('origin')} to {selection.get('destination')}. "
-        f"Departure {selection.get('departure')}, arrival {selection.get('arrival')} (next day arrival in Austin). "
-        f"Seat assigned: {ctx_state.seat_number}. Confirmation {confirmation}."
+        f"Reacomodado al {selection['flight_number']} de {selection.get('origin')} a {selection.get('destination')}. "
+        f"Sale {selection.get('departure')}, llega {selection.get('arrival')} (llegada al día siguiente a Cartagena). "
+        f"Asiento asignado: {ctx_state.seat_number}. Confirmación {confirmation}."
     )
 
 
@@ -278,12 +278,13 @@ async def book_new_flight(
     description_override="Assign front row or special service seating for medical needs."
 )
 async def assign_special_service_seat(
-    context: RunContextWrapper[AirlineAgentChatContext], seat_request: str = "front row for medical needs"
+    context: RunContextWrapper[AirlineAgentChatContext], seat_request: str = "fila delantera por motivos médicos"
 ) -> str:
     """Assign a special service seat and record the request."""
     ctx_state = context.context.state
     apply_itinerary_defaults(ctx_state)
-    preferred_seat = "1A" if "front" in seat_request.lower() else "2A"
+    req = seat_request.lower()
+    preferred_seat = "1A" if ("front" in req or "delant" in req or "fila" in req) else "2A"
     ctx_state.seat_number = preferred_seat
     ctx_state.special_service_note = seat_request
     confirmation = ctx_state.confirmation_number or "".join(
@@ -291,8 +292,8 @@ async def assign_special_service_seat(
     )
     ctx_state.confirmation_number = confirmation
     return (
-        f"Secured {seat_request} seat {preferred_seat} on flight {ctx_state.flight_number or 'upcoming segment'}. "
-        f"Confirmation {confirmation} noted with special service flag."
+        f"Asegurado el asiento {preferred_seat} ({seat_request}) en el vuelo {ctx_state.flight_number or 'próximo tramo'}. "
+        f"Confirmación {confirmation} marcada con servicio especial."
     )
 
 
@@ -301,10 +302,10 @@ async def assign_special_service_seat(
     description_override="Create a compensation case and issue hotel/meal vouchers."
 )
 async def issue_compensation(
-    context: RunContextWrapper[AirlineAgentChatContext], reason: str = "Delay causing missed connection"
+    context: RunContextWrapper[AirlineAgentChatContext], reason: str = "Retraso que causó una conexión perdida"
 ) -> str:
     """Open a compensation case and attach vouchers."""
-    await context.context.stream(ProgressUpdateEvent(text="Opening compensation case..."))
+    await context.context.stream(ProgressUpdateEvent(text="Abriendo caso de compensación..."))
     ctx_state = context.context.state
     scenario_key, itinerary = active_itinerary(ctx_state)
     apply_itinerary_defaults(ctx_state, scenario_key=scenario_key)
@@ -315,11 +316,11 @@ async def issue_compensation(
         ctx_state.vouchers = voucher_values
     else:
         ctx_state.vouchers = ctx_state.vouchers or []
-    vouchers_text = "; ".join(ctx_state.vouchers) if ctx_state.vouchers else "Documented compensation with no vouchers required."
-    await context.context.stream(ProgressUpdateEvent(text=f"Issued vouchers for case {case_id}"))
+    vouchers_text = "; ".join(ctx_state.vouchers) if ctx_state.vouchers else "Compensación documentada sin vales requeridos."
+    await context.context.stream(ProgressUpdateEvent(text=f"Vales emitidos para el caso {case_id}"))
     return (
-        f"Opened compensation case {case_id} for: {reason}. "
-        f"Issued: {vouchers_text}. Keep receipts for any hotel or meal costs and attach them to this case."
+        f"Caso de compensación {case_id} abierto por: {reason}. "
+        f"Emitido: {vouchers_text}. Guarda los recibos de hotel o comidas y adjúntalos a este caso."
     )
 
 
@@ -350,4 +351,4 @@ async def cancel_flight(
         random.choices(string.ascii_uppercase + string.digits, k=6)
     )
     context.context.state.confirmation_number = confirmation
-    return f"Flight {fn} successfully cancelled for confirmation {confirmation}"
+    return f"Vuelo {fn} cancelado correctamente para la confirmación {confirmation}"

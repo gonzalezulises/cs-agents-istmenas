@@ -412,7 +412,7 @@ class AirlineServer(ChatKitServer[dict[str, Any]]):
                     )
                 )
             state.guardrails = checks
-            refusal = "Sorry, I can only answer questions related to airline travel."
+            refusal = "Lo siento, solo puedo ayudarte con temas de viajes y de Aerolíneas Istmeñas."
             state.input_items.append({"role": "assistant", "content": refusal})
             yield ThreadItemDoneEvent(
                 item=AssistantMessageItem(

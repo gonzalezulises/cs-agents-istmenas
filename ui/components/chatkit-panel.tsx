@@ -29,7 +29,7 @@ export function ChatKitPanel({
       domainKey: CHATKIT_DOMAIN_KEY,
     },
     composer: {
-      placeholder: "Message...",
+      placeholder: "Escribe tu mensaje...",
     },
     history: {
       enabled: false,
@@ -47,17 +47,17 @@ export function ChatKitPanel({
     },
     initialThread: initialThreadId ?? null,
     startScreen: {
-      greeting: "Hi! I'm your airline assistant. How can I help today?",
+      greeting: "¡Hola! Soy tu asistente de Aerolíneas Istmeñas. ¿En qué te puedo ayudar hoy?",
       prompts: [
-        { label: "Change my seat", prompt: "Can you move me to seat 14C?" },
+        { label: "Cambiar mi asiento", prompt: "¿Me puedes mover al asiento 14C?" },
         {
-          label: "Flight status",
-          prompt: "What's the status of flight FLT-123?",
+          label: "Estado de vuelo",
+          prompt: "¿Cuál es el estado del vuelo IS-123?",
         },
         {
-          label: "Missed connection",
+          label: "Conexión perdida",
           prompt:
-            "My flight from Paris to New York was delayed and I missed my connection to Austin. Also, my checked bag is missing and I need to spend the night in New York. Can you help me?",
+            "Mi vuelo de David a Ciudad de Panamá se retrasó y perdí mi conexión a Cartagena. Además, mi equipaje facturado no aparece y necesito pasar la noche en la ciudad. ¿Me pueden ayudar?",
         },
       ],
     },
@@ -89,7 +89,7 @@ export function ChatKitPanel({
     <div className="flex flex-col h-full flex-1 bg-white shadow-sm border border-gray-200 border-t-0 rounded-xl">
       <div className="bg-blue-600 text-white h-12 px-4 flex items-center rounded-t-xl">
         <h2 className="font-semibold text-sm sm:text-base lg:text-lg">
-          Customer View
+          Vista del Cliente
         </h2>
       </div>
       <div className="flex-1 overflow-hidden pb-1.5">

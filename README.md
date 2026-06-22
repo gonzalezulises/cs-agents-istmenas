@@ -1,8 +1,16 @@
-# Customer Service Agents Demo
+# Aerolíneas Istmeñas — Customer Service Agents Demo
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![NextJS](https://img.shields.io/badge/Built_with-NextJS-blue)
 ![OpenAI API](https://img.shields.io/badge/Powered_by-OpenAI_API-orange)
+
+> **Fork personalizado** de [`openai/openai-cs-agents-demo`](https://github.com/openai/openai-cs-agents-demo) (MIT).
+> Adaptado a una aerolínea panameña ficticia, **Aerolíneas Istmeñas**: los agentes atienden al cliente
+> **en español** (tuteo, sin voseo), con datos de demo locales (rutas David → Ciudad de Panamá → Cartagena,
+> vuelos `IS-###`). El panel de orquestación (*Agent View*) se mantiene en inglés. Usado en el webinar
+> *Especialidad de Agentes con IA* de TECNASA U.
+>
+> **Arranque rápido:** `./start.sh` lee tu `OPENAI_API_KEY` del macOS Keychain y levanta backend + UI.
 
 This repository contains a demo of a Customer Service interface built on top of the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/).
 
